@@ -17,12 +17,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<String> _categories = ['general', 'technology', 'business', 'entertainment', 'health', 'science', 'sports'];
+  final Map<String, IconData> _allCategories = {
+    'general': Icons.home_outlined,
+    'technology': Icons.memory_outlined,
+    'business': Icons.business_center_outlined,
+    'science': Icons.science_outlined,
+    'sports': Icons.sports_soccer_outlined,
+    'health': Icons.health_and_safety_outlined,
+    'entertainment': Icons.movie_outlined,
+  };
 
   @override
   void initState() {
     super.initState();
-    context.read<NewsCubit>().fetchNewsByTab(_categories[_currentIndex]);
+    context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]);
   }
 
   void _onTabTapped(int index) {
@@ -31,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = index;
     });
-    context.read<NewsCubit>().fetchNewsByTab(_categories[index]);
+    context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[index]);
   }
 
   @override
@@ -40,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return Scaffold(
       backgroundColor: bgColor,
+      drawer: _buildSidebar(context),
       appBar: AppBar(
         backgroundColor: bgColor,
         surfaceTintColor: Colors.transparent,
@@ -62,26 +71,39 @@ class _HomeScreenState extends State<HomeScreen> {
           if (state is NewsInitial || state is NewsLoading) {
             return const ShimmerLoading();
           } else if (state is NewsError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, color: Color(0xFFFFB4AB), size: 60),
-                    const SizedBox(height: 16),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFFE2E2E2), fontSize: 16),
+            return RefreshIndicator(
+              onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+                _allCategories.keys.toList()[_currentIndex],
+              ),
+              color: const Color(0xFF9CE39E),
+              backgroundColor: const Color(0xFF1E2020),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, color: Color(0xFFFFB4AB), size: 60),
+                          const SizedBox(height: 16),
+                          Text(
+                            state.message,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Color(0xFFE2E2E2), fontSize: 16),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9CE39E)),
+                            onPressed: () => context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]),
+                            child: const Text('Reintentar', style: TextStyle(color: Color(0xFF003911))),
+                          )
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9CE39E)),
-                      onPressed: () => context.read<NewsCubit>().fetchNewsByTab(_categories[_currentIndex]),
-                      child: const Text('Reintentar', style: TextStyle(color: Color(0xFF003911))),
-                    )
-                  ],
+                  ),
                 ),
               ),
             );
@@ -89,25 +111,47 @@ class _HomeScreenState extends State<HomeScreen> {
             final articles = state.articles;
             
             if (articles.isEmpty) {
-              return const Center(child: Text('No hay noticias disponibles.', style: TextStyle(color: Colors.white)));
+              return RefreshIndicator(
+                onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+                  _allCategories.keys.toList()[_currentIndex],
+                ),
+                color: const Color(0xFF9CE39E),
+                backgroundColor: const Color(0xFF1E2020),
+                child: const SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: 500,
+                    child: Center(
+                      child: Text('No hay noticias disponibles.', style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ),
+              );
             }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(20.0),
-              itemCount: articles.length,
-              itemBuilder: (context, index) {
-                return NewsCard(
-                  article: articles[index],
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailScreen(article: articles[index]),
-                      ),
-                    );
-                  },
-                );
-              },
+            return RefreshIndicator(
+              onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+                _allCategories.keys.toList()[_currentIndex],
+              ),
+              color: const Color(0xFF9CE39E),
+              backgroundColor: const Color(0xFF1E2020),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20.0),
+                itemCount: articles.length,
+                itemBuilder: (context, index) {
+                  return NewsCard(
+                    article: articles[index],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailScreen(article: articles[index]),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             );
           }
           return const SizedBox.shrink();
@@ -146,6 +190,58 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context) {
+    return Drawer(
+      backgroundColor: const Color(0xFF121414),
+      child: Column(
+        children: [
+          // Header del Sidebar
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFF1E2020)),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.cloud_queue, size: 50, color: Color(0xFF9CE39E)),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'FILTRAR NOTICIAS',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Listado de Categorías
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              children: _allCategories.entries.map((entry) {
+                return ListTile(
+                  leading: Icon(entry.value, color: const Color(0xFFA7FFEB)),
+                  title: Text(
+                    entry.key.toUpperCase(),
+                    style: const TextStyle(color: Color(0xFFC0C9BC), fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () {
+                    // Cierra el sidebar
+                    Navigator.pop(context);
+                    // Dispara la lógica de filtrado
+                    context.read<NewsCubit>().fetchNewsByTab(entry.key);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Text("v1.0.0 - Universidad Nur", style: TextStyle(color: Colors.grey, fontSize: 10)),
+          )
+        ],
       ),
     );
   }

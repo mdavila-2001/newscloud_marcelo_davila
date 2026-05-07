@@ -27,6 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
     'entertainment': Icons.movie_outlined,
   };
 
+  final Map<String, String> _categoryTranslations = {
+    'general': 'General',
+    'technology': 'Tecnología',
+    'business': 'Negocios',
+    'science': 'Ciencia',
+    'sports': 'Deportes',
+    'health': 'Salud',
+    'entertainment': 'Entretenimiento',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -61,9 +71,11 @@ class _HomeScreenState extends State<HomeScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF9CE39E)),
-          onPressed: () {},
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Color(0xFF9CE39E)),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
       ),
       body: BlocBuilder<NewsCubit, NewsState>(
@@ -176,17 +188,17 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: _buildNavIcon(Icons.home_outlined, 0),
               activeIcon: _buildNavIcon(Icons.home, 0, isActive: true),
-              label: 'Home',
+              label: 'General',
             ),
             BottomNavigationBarItem(
               icon: _buildNavIcon(Icons.memory_outlined, 1),
               activeIcon: _buildNavIcon(Icons.memory, 1, isActive: true),
-              label: 'Technology',
+              label: 'Tecnología',
             ),
             BottomNavigationBarItem(
               icon: _buildNavIcon(Icons.business_center_outlined, 2),
               activeIcon: _buildNavIcon(Icons.business_center, 2, isActive: true),
-              label: 'Business',
+              label: 'Negocios',
             ),
           ],
         ),
@@ -224,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return ListTile(
                   leading: Icon(entry.value, color: const Color(0xFFA7FFEB)),
                   title: Text(
-                    entry.key.toUpperCase(),
+                    (_categoryTranslations[entry.key] ?? entry.key).toUpperCase(),
                     style: const TextStyle(color: Color(0xFFC0C9BC), fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   onTap: () {

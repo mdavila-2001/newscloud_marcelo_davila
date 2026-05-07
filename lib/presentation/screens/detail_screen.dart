@@ -83,11 +83,6 @@ class DetailScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Lectura de 5 min",
-                        style: TextStyle(color: colorTextVariant, fontSize: 12),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),

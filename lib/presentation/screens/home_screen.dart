@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:newscloud_marcelo_davila/presentation/screens/detail_screen.dart';
 import 'package:newscloud_marcelo_davila/presentation/widgets/shimmer_loading.dart';
 
-import '../../logic/news_cubit.dart';
+import '../../logic/news_provider.dart';
 import '../../logic/news_state.dart';
 import '../widgets/news_card.dart';
 
@@ -40,7 +40,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]);
+    // Usamos addPostFrameCallback para evitar el error de "setState() called during build"
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<NewsProvider>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]);
+      }
+    });
   }
 
   void _onTabTapped(int index) {
@@ -49,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = index;
     });
-    context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[index]);
+    context.read<NewsProvider>().fetchNewsByTab(_allCategories.keys.toList()[index]);
   }
 
   @override
@@ -78,13 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: BlocBuilder<NewsCubit, NewsState>(
-        builder: (context, state) {
+      body: Consumer<NewsProvider>(
+        builder: (context, provider, child) {
+          final state = provider.state;
           if (state is NewsInitial || state is NewsLoading) {
             return const ShimmerLoading();
           } else if (state is NewsError) {
             return RefreshIndicator(
-              onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+              onRefresh: () => context.read<NewsProvider>().fetchNewsByTab(
                 _allCategories.keys.toList()[_currentIndex],
               ),
               color: const Color(0xFF9CE39E),
@@ -109,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(height: 24),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9CE39E)),
-                            onPressed: () => context.read<NewsCubit>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]),
+                            onPressed: () => context.read<NewsProvider>().fetchNewsByTab(_allCategories.keys.toList()[_currentIndex]),
                             child: const Text('Reintentar', style: TextStyle(color: Color(0xFF003911))),
                           )
                         ],
@@ -124,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
             
             if (articles.isEmpty) {
               return RefreshIndicator(
-                onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+                onRefresh: () => context.read<NewsProvider>().fetchNewsByTab(
                   _allCategories.keys.toList()[_currentIndex],
                 ),
                 color: const Color(0xFF9CE39E),
@@ -142,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             return RefreshIndicator(
-              onRefresh: () => context.read<NewsCubit>().fetchNewsByTab(
+              onRefresh: () => context.read<NewsProvider>().fetchNewsByTab(
                 _allCategories.keys.toList()[_currentIndex],
               ),
               color: const Color(0xFF9CE39E),
@@ -243,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Cierra el sidebar
                     Navigator.pop(context);
                     // Dispara la lógica de filtrado
-                    context.read<NewsCubit>().fetchNewsByTab(entry.key);
+                    context.read<NewsProvider>().fetchNewsByTab(entry.key);
                   },
                 );
               }).toList(),

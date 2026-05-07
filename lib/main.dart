@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:newscloud_marcelo_davila/presentation/screens/home_screen.dart';
-import 'logic/news_cubit.dart';
+import 'logic/news_provider.dart';
 import 'data/repositories/news_repository.dart';
 
 void main() async {
@@ -16,10 +16,10 @@ class NewsCloudApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider(
+    return Provider<NewsRepository>(
       create: (context) => NewsRepository(),
-      child: BlocProvider(
-        create: (context) => NewsCubit(context.read<NewsRepository>()),
+      child: ChangeNotifierProvider<NewsProvider>(
+        create: (context) => NewsProvider(context.read<NewsRepository>()),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'NewsCloud',
